@@ -11,4 +11,4 @@
 8. Book Reservation
 9. Membership Tier & Borrowing Limit Enforcement
 
-<img width="6775" height="5780" alt="EER_diagram" src="https://github.com/user-attachments/assets/dc62eec4-b9fc-459e-b79f-43beb584d378" />
+<img width="6775" height="5780" alt="370 LAB Project EER drawio" src="https://github.com/user-attachments/assets/29e65941-d349-456e-96f9-40748546488c" />
