@@ -14,7 +14,7 @@
 		>
 		<Sheet.Content side="left">
 			<Sheet.Header>
-				<Sheet.Title class="text-4xl">Menu</Sheet.Title>
+				<Sheet.Title class="text-4xl select-none">Menu</Sheet.Title>
 
 				<Separator />
 
