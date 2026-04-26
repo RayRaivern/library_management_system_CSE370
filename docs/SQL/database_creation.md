@@ -18,7 +18,9 @@ CREATE TABLE Membership_Tiers (
 ## 2. User Table
 ```sql
 CREATE TABLE User (
-    id INT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     admin BOOLEAN DEFAULT FALSE,
     contact_number VARCHAR(20),
     address TEXT,
