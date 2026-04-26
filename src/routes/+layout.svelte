@@ -4,6 +4,7 @@
 
   import { ModeWatcher } from 'mode-watcher';
   import Navbar from '$lib/components/main/Navbar.svelte';
+  import Separator from '$lib/components/ui/separator/separator.svelte';
 
 	let { children } = $props();
 </script>
@@ -12,4 +13,5 @@
 
 <ModeWatcher />
 <Navbar />
+<Separator />
 {@render children()}
