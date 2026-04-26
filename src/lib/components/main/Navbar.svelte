@@ -5,51 +5,68 @@
 	import * as Sheet from '$lib/components/ui/sheet/';
 	import { Separator } from '$lib/components/ui/separator';
 	import { toggleMode } from 'mode-watcher';
+
+	const navLinks = [
+		{ label: 'Home', href: '/' },
+		{ label: 'Advanced Search', href: '/search' },
+		{ label: 'Browse Books', href: '/books' },
+		{ label: 'Browse Authors', href: '/authors' },
+		{ label: 'Popular Books', href: '/popular' },
+	];
 </script>
 
-<div class="m-6 flex">
-	<Sheet.Root>
-		<Sheet.Trigger class={buttonVariants({ variant: 'outline', size: 'icon-lg' })}
-			><Menu /></Sheet.Trigger
-		>
-		<Sheet.Content side="left">
-			<Sheet.Header>
-				<Sheet.Title class="text-4xl select-none">Menu</Sheet.Title>
+<header class="border-b bg-background px-6">
+	<div class="flex h-14 items-center gap-4">
 
-				<Separator />
+		<!-- Site title / logo -->
+		<a href="/" class="mr-4 text-lg font-semibold tracking-tight select-none whitespace-nowrap">
+			Library
+		</a>
 
-				<nav class="flex flex-1 flex-col gap-4 py-6">
-					<Button variant="ghost" href="/" class="justify-start text-2xl">Home</Button>
-					<Separator />
-					<Button variant="ghost" href="/categories" class="justify-start text-2xl">
-						Browse Categories
-					</Button>
-					<Separator />
-					<Button variant="ghost" href="/tags" class="justify-start text-2xl">Browse Tags</Button>
-					<Separator />
-					<Button variant="ghost" href="/recents" class="justify-start text-2xl">
-						Browse Recents
-					</Button>
-					<Separator />
-				</nav>
-			</Sheet.Header>
-			<Sheet.Footer>
-				<div class="container flex justify-end">
-					<Button onclick={toggleMode} variant="outline" size="icon">
-						<Sun
-							class="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 !transition-all dark:scale-0 dark:-rotate-90"
-						/>
-						<Moon
-							class="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 !transition-all dark:scale-100 dark:rotate-0"
-						/>
-						<span class="sr-only">Toggle theme</span>
-					</Button>
-				</div>
-			</Sheet.Footer>
-		</Sheet.Content>
-	</Sheet.Root>
+		<!-- Desktop nav links -->
+		<nav class="hidden md:flex items-center gap-1">
+			{#each navLinks as link}
+				<Button variant="ghost" href={link.href} class="text-sm">
+					{link.label}
+				</Button>
+			{/each}
+		</nav>
 
-	<Button variant="outline" href="/user" size="icon-lg" class="ml-auto">
-		<User />
-	</Button>
-</div>
+		<!-- Right-side actions -->
+		<div class="ml-auto flex items-center gap-2">
+			<!-- Theme toggle (always visible) -->
+			<Button onclick={toggleMode} variant="outline" size="icon">
+				<Sun class="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 !transition-all dark:scale-0 dark:-rotate-90" />
+				<Moon class="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 !transition-all dark:scale-100 dark:rotate-0" />
+				<span class="sr-only">Toggle theme</span>
+			</Button>
+
+			<!-- User profile (always visible) -->
+			<Button variant="outline" href="/user" size="icon">
+				<User />
+			</Button>
+
+			<!-- Mobile menu trigger (hidden on desktop) -->
+			<Sheet.Root>
+				<Sheet.Trigger class="{buttonVariants({ variant: 'outline', size: 'icon' })} md:hidden">
+					<Menu />
+				</Sheet.Trigger>
+				<Sheet.Content side="left">
+					<Sheet.Header>
+						<Sheet.Title class="text-4xl select-none">Menu</Sheet.Title>
+						<Separator />
+						<nav class="flex flex-1 flex-col gap-4 py-6">
+							{#each navLinks as link}
+								<Button variant="ghost" href={link.href} class="justify-start text-2xl">
+									{link.label}
+								</Button>
+								<Separator />
+							{/each}
+						</nav>
+					</Sheet.Header>
+				</Sheet.Content>
+			</Sheet.Root>
+		</div>
+
+	</div>
+</header>
