@@ -14,5 +14,5 @@
 # EER Diagram
 <img width="6775" height="5780" alt="370 LAB Project EER drawio" src="https://github.com/user-attachments/assets/29e65941-d349-456e-96f9-40748546488c" />
 
-# Schema Diagram
-<img width="3474" height="3120" alt="370 LAB Project Schema drawio" src="https://github.com/user-attachments/assets/3c2020b0-79ef-4be5-8c2f-d19e6500b896" />
+# Schema Diagram [Normalised]
+<img width="3474" height="3258" alt="370 LAB Project Schema Normalised drawio" src="https://github.com/user-attachments/assets/5fc51056-6a44-499d-be02-d2331e8122fc" />
