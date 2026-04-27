@@ -118,6 +118,10 @@ UNLOCK TABLES;
 
 LOCK TABLES `Membership_Tiers` WRITE;
 /*!40000 ALTER TABLE `Membership_Tiers` DISABLE KEYS */;
+INSERT INTO `Membership_Tiers` VALUES
+('Advanced',5,3),
+('Premium',10,10),
+('Standard',3,1);
 /*!40000 ALTER TABLE `Membership_Tiers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -145,6 +149,9 @@ UNLOCK TABLES;
 
 LOCK TABLES `User` WRITE;
 /*!40000 ALTER TABLE `User` DISABLE KEYS */;
+INSERT INTO `User` VALUES
+(1,'TestUser','passtest',0,'546321','Checking Address, Dhaka','2026-04-26',0.00,NULL),
+(2,'Anas','otherpass',0,'467832','Khilgaon, Dhaka','2026-04-27',0.00,'Standard');
 /*!40000 ALTER TABLE `User` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -156,4 +163,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-27  2:07:36
+-- Dump completed on 2026-04-27  6:07:50

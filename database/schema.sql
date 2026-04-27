@@ -171,7 +171,9 @@ DROP TABLE IF EXISTS `User`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `User` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
   `admin` tinyint(1) DEFAULT 0,
   `contact_number` varchar(20) DEFAULT NULL,
   `address` text DEFAULT NULL,
@@ -179,6 +181,7 @@ CREATE TABLE `User` (
   `fine_amount` decimal(10,2) DEFAULT 0.00,
   `membership_tier` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
   KEY `membership_tier` (`membership_tier`),
   CONSTRAINT `User_ibfk_1` FOREIGN KEY (`membership_tier`) REFERENCES `Membership_Tiers` (`tier_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -193,4 +196,4 @@ CREATE TABLE `User` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-27  1:43:59
+-- Dump completed on 2026-04-27  5:48:45
