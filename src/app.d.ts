@@ -11,6 +11,22 @@ declare global {
         membership_tier: string;
       };
     }
+
+    // ✅ ADD THESE TYPES
+    interface Book {
+      ISBN: string;
+      name: string;
+      author?: string;
+      price?: number;
+      language?: string;
+      times_borrowed?: number;
+    }
+
+    interface Author {
+      author_id: number;
+      name: string;
+    }
+
     // interface PageData {}
     // interface PageState {}
     // interface Platform {}
