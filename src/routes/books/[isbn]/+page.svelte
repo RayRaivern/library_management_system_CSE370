@@ -22,6 +22,37 @@
 	let reviewToEdit = $state<any>(null);
 </script>
 
+{#if data.books}
+<div class="container mx-auto px-4 py-10">
+	<h1 class="mb-6 text-3xl font-bold">Books</h1>
+
+	<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+		{#each data.books as b}
+			<Card.Root class="p-4">
+				<Card.Header>
+					<Card.Title class="text-xl">{b.name}</Card.Title>
+					<p class="text-sm text-muted-foreground">
+						by {b.authors || b.author || 'Unknown'}
+					</p>
+				</Card.Header>
+
+				<Card.Content class="space-y-2">
+					<p><strong>ISBN:</strong> {b.ISBN}</p>
+					<p><strong>Language:</strong> {b.language || 'N/A'}</p>
+					<p><strong>Price:</strong> ${b.price || '0.00'}</p>
+				</Card.Content>
+
+				<Card.Footer>
+					<a href={`/books/${b.ISBN}`}>
+						<Button variant="outline">View Details</Button>
+					</a>
+				</Card.Footer>
+			</Card.Root>
+		{/each}
+	</div>
+</div>
+{:else}
+
 <div class="container mx-auto px-4 py-10">
 	<Card.Root class="mx-auto max-w-4xl shadow-lg">
 		<Card.Header>
@@ -224,3 +255,5 @@
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>
+
+{/if}
