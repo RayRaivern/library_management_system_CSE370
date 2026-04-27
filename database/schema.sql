@@ -197,3 +197,18 @@ CREATE TABLE `User` (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-04-27  5:48:45
+
+CREATE TABLE `Author` (
+  `author_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE `Book_Authors` (
+  `ISBN` VARCHAR(20) NOT NULL,
+  `author_id` INT NOT NULL,
+  PRIMARY KEY (`ISBN`, `author_id`),
+  FOREIGN KEY (`ISBN`) REFERENCES `Book`(`ISBN`) ON DELETE CASCADE,
+  FOREIGN KEY (`author_id`) REFERENCES `Author`(`author_id`) ON DELETE CASCADE
+);
+
+
