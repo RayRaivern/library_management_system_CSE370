@@ -198,6 +198,11 @@ CREATE TABLE `User` (
 
 -- Dump completed on 2026-04-27  5:48:45
 
+/* Dynamic Member borrowing history*/
+CREATE INDEX idx_loans_user_id ON Loans(user_id);
+CREATE INDEX idx_loans_barcode ON Loans(barcode);
+CREATE INDEX idx_copy_isbn ON Copy(ISBN);
+
 
 
 
