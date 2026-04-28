@@ -2,18 +2,35 @@ import { db } from '$lib/server/db';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
-  const { isbn } = params;
+export const load: PageServerLoad = async ({ locals }) => {
 
-  // 1. Fetch main book details
-  const [bookRows]: any = await db.query(
-    'SELECT * FROM Book WHERE ISBN = ?',
-      [isbn]
+  if (!locals.user) {
+    throw redirect(303, '/login');
+  }
+
+  const userId = locals.user.id;
+
+  const [historyRows]: any = await db.query(
+    `SELECT 
+        l.loan_id,
+        l.borrow_date,
+        l.due_date,
+        l.return_date,
+        b.name AS book_name,
+        b.ISBN,
+        c.barcode
+     FROM Loans l
+     JOIN Copy c ON l.barcode = c.barcode
+     JOIN Book b ON c.ISBN = b.ISBN
+     WHERE l.user_id = ?
+     ORDER BY l.borrow_date DESC`,
+    [userId]
   );
 
-  if (bookRows.length === 0) {
-    throw error(404, 'Book not found');
-  }
+  return {
+    history: historyRows
+  };
+};
 
   // 2. Fetch categories for this book
   const [categoryRows]: any = await db.query(
