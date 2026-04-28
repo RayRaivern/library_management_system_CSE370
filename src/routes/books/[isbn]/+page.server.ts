@@ -3,9 +3,9 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
+  // Getting isbn from the link parameter
   const { isbn } = params;
 
-  // 1. Fetch main book details
   const [bookRows]: any = await db.query(
     'SELECT * FROM Book WHERE ISBN = ?',
       [isbn]
@@ -15,13 +15,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     throw error(404, 'Book not found');
   }
 
-  // 2. Fetch categories for this book
   const [categoryRows]: any = await db.query(
     'SELECT category_type, value FROM Book_Categories WHERE ISBN = ?',
       [isbn]
   );
 
-  // 3. Fetch reviews joined with User to get the username
+  // Feature 7
   const [reviewRows]: any = await db.query(
     `SELECT r.*, u.username 
     FROM Review r 
@@ -42,18 +41,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+
+  // Feature 7
   addReview: async ({ request, params, locals }) => {
     // Check if loggged in or not
     if (!locals.user) {
       throw redirect(303, '/login');
     }
 
+    // Get user inputs
     const data = await request.formData();
     const title = data.get('title');
     const rating = data.get('rating');
     const content = data.get('content');
     const isbn = params.isbn;
     const userId = locals.user.id;
+
+    // Insert Review to database
     const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
     try {
       await db.query(
@@ -69,6 +73,7 @@ export const actions: Actions = {
     }
   },
 
+  // Feature 7
   editReview: async ({ request, params, locals }) => {
     if (!locals.user) throw redirect(303, '/login');
 
