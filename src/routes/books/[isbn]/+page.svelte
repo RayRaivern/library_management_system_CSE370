@@ -45,9 +45,11 @@
 
 					<p>
 						<strong>Status:</strong>
-						{#if !h.return_date}
+						{#if !h.return_date && new Date(h.due_date) < new Date()}
+							Overdue
+						{:else if !h.return_date}
 							Borrowed
-						{:else if h.return_date > h.due_date}
+						{:else if new Date(h.return_date) > new Date(h.due_date)}
 							Overdue
 						{:else}
 							Returned
