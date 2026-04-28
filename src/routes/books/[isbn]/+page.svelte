@@ -17,10 +17,48 @@
 	const userHasReviewed = $derived(data.userHasReviewed);
 	const user = $derived(data.user);
 
+	const history = $derived(data.history);
+
 	let open = $state(false);
 	let isEditOpen = $state(false);
 	let reviewToEdit = $state<any>(null);
 </script>
+
+{#if history}
+<div class="container mx-auto px-4 py-10">
+	<h1 class="mb-6 text-3xl font-bold">Borrowing History</h1>
+
+	<div class="space-y-4">
+		{#each history as h}
+			<Card.Root class="p-4">
+				<Card.Header>
+					<Card.Title class="text-xl">{h.book_name}</Card.Title>
+					<p class="text-sm text-muted-foreground">
+						Barcode: {h.barcode}
+					</p>
+				</Card.Header>
+
+				<Card.Content class="space-y-2">
+					<p><strong>Borrow Date:</strong> {h.borrow_date}</p>
+					<p><strong>Due Date:</strong> {h.due_date}</p>
+					<p><strong>Return Date:</strong> {h.return_date || 'Not returned'}</p>
+
+					<p>
+						<strong>Status:</strong>
+						{#if !h.return_date}
+							Borrowed
+						{:else if h.return_date > h.due_date}
+							Overdue
+						{:else}
+							Returned
+						{/if}
+					</p>
+				</Card.Content>
+			</Card.Root>
+		{/each}
+	</div>
+</div>
+{/if}
 
 {#if data.books}
 <div class="container mx-auto px-4 py-10">
