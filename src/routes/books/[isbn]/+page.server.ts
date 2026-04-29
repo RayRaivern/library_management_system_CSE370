@@ -45,6 +45,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     [isbn]
   );
 
+  // Tags
+  const [tagRows]: any = await db.query(
+    'SELECT tag FROM Book_Tags WHERE ISBN = ?',
+    [isbn]
+  );
+
   // Reviews
   const [reviewRows]: any = await db.query(
     `SELECT r.*, u.username 
@@ -61,6 +67,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     history: historyRows,
     book: bookRows[0],
     categories: categoryRows,
+    tags: tagRows,
     reviews: reviewRows,
     userHasReviewed
   };
