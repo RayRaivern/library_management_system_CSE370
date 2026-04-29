@@ -13,6 +13,7 @@
 	let { data } = $props();
 	const book = $derived(data.book);
 	const categories = $derived(data.categories);
+	const tags = $derived(data.tags);
 	const reviews = $derived(data.reviews);
 	const userHasReviewed = $derived(data.userHasReviewed);
 	const user = $derived(data.user);
@@ -104,6 +105,20 @@
 					{/each}
 					{#if categories.length === 0}
 						<p class="text-sm text-muted-foreground">No categories listed.</p>
+					{/if}
+				</div>
+			</div>
+
+			<div>
+				<h3 class="mb-3 text-lg font-semibold">Tags</h3>
+				<div class="flex flex-wrap gap-2">
+					{#each tags as tag}
+						<Badge variant="outline">
+							{tag.tag}
+						</Badge>
+					{/each}
+					{#if tags.length === 0}
+						<p class="text-sm text-muted-foreground">No tags listed.</p>
 					{/if}
 				</div>
 			</div>
