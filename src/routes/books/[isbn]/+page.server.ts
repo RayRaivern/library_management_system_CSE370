@@ -2,14 +2,16 @@ import { db } from '$lib/server/db';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 
   if (!locals.user) {
     throw redirect(303, '/login');
   }
 
   const userId = locals.user.id;
+  const { isbn } = params;
 
+  // Borrow history
   const [historyRows]: any = await db.query(
     `SELECT 
         l.loan_id,
@@ -27,30 +29,36 @@ export const load: PageServerLoad = async ({ locals }) => {
     [userId]
   );
 
-  return {
-    history: historyRows
-  };
-};
-
-  // 2. Fetch categories for this book
-  const [categoryRows]: any = await db.query(
-    'SELECT category_type, value FROM Book_Categories WHERE ISBN = ?',
-      [isbn]
-  );
-
-  // 3. Fetch reviews joined with User to get the username
-  const [reviewRows]: any = await db.query(
-    `SELECT r.*, u.username 
-    FROM Review r 
-    JOIN User u ON r.user_id = u.id 
-    WHERE r.ISBN = ? 
-      ORDER BY r.date_and_time DESC`,
+  // Book
+  const [bookRows]: any = await db.query(
+    'SELECT * FROM Book WHERE ISBN = ?',
     [isbn]
   );
 
-  const userHasReviewed = locals.user ? reviewRows.some((r: any) => r.user_id === locals.user.id) : false;
+  if (bookRows.length === 0) {
+    throw error(404, 'Book not found');
+  }
+
+  // Categories
+  const [categoryRows]: any = await db.query(
+    'SELECT category_type, value FROM Book_Categories WHERE ISBN = ?',
+    [isbn]
+  );
+
+  // Reviews
+  const [reviewRows]: any = await db.query(
+    `SELECT r.*, u.username 
+     FROM Review r 
+     JOIN User u ON r.user_id = u.id 
+     WHERE r.ISBN = ? 
+     ORDER BY r.date_and_time DESC`,
+    [isbn]
+  );
+
+  const userHasReviewed = reviewRows.some((r: any) => r.user_id === userId);
 
   return {
+    history: historyRows,
     book: bookRows[0],
     categories: categoryRows,
     reviews: reviewRows,
