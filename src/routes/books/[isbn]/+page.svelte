@@ -15,7 +15,6 @@
 	const categories = $derived(data.categories);
 	const reviews = $derived(data.reviews);
 	const userHasReviewed = $derived(data.userHasReviewed);
-	const user = $derived(data.user);
 
 	const history = $derived(data.history);
 
