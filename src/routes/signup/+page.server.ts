@@ -11,10 +11,9 @@ export const actions: Actions = {
         const password = data.get('password');
         const contact_number = data.get('contact_number');
         const address = data.get('address');
-        const join_date = new Date().toISOString().split('T')[0]; // Current date for MariaDB (YYYY-MM-DD)
+        const join_date = new Date().toISOString().split('T')[0]; 
 
         try {
-            // Raw SQL Insert based on your User table schema
             await db.query(
                 `INSERT INTO User (username, password, contact_number, address, join_date, membership_tier) 
                  VALUES (?, ?, ?, ?, ?, ?)`,
@@ -25,7 +24,6 @@ export const actions: Actions = {
             return { success: false, message: "Could not create user." };
         }
 
-        // Redirect to login page after successful registration
         throw redirect(303, '/login');
     }
 };
