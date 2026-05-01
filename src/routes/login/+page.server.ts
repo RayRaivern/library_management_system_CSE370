@@ -8,10 +8,9 @@ export const actions: Actions = {
 		const username = data.get('username');
 		const password = data.get('password');
 
-		const [rows]: any = await db.query(
-			'SELECT id, password FROM User WHERE username = ?', 
-			[username]
-		);
+		const [rows]: any = await db.query('SELECT id, password FROM User WHERE username = ?', [
+			username
+		]);
 
 		const user = rows[0];
 
@@ -19,7 +18,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Invalid username or password' });
 		}
 
-    // Cookie set
+		// Cookie set
 		cookies.set('userId', user.id.toString(), {
 			path: '/',
 			httpOnly: true,

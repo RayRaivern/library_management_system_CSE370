@@ -1,12 +1,15 @@
 # SQL Create Table commands
+
 Database name: **LibraryDB**
 
 ## Database Creation
+
 ```sql
 CREATE DATABASE LibraryDB;
 ```
 
 ## 1. Membership Table
+
 ```sql
 CREATE TABLE Membership_Tiers (
     tier_name VARCHAR(50) PRIMARY KEY,
@@ -16,6 +19,7 @@ CREATE TABLE Membership_Tiers (
 ```
 
 ## 2. User Table
+
 ```sql
 CREATE TABLE User (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -32,6 +36,7 @@ CREATE TABLE User (
 ```
 
 ## 3. Book Table
+
 ```sql
 CREATE TABLE Book (
     ISBN VARCHAR(20) PRIMARY KEY,
@@ -44,6 +49,7 @@ CREATE TABLE Book (
 ```
 
 ## 4. Book_Categories Table
+
 ```sql
 CREATE TABLE Book_Categories (
     ISBN VARCHAR(20),
@@ -55,6 +61,7 @@ CREATE TABLE Book_Categories (
 ```
 
 ## 5. Book_Tags Table
+
 ```sql
 CREATE TABLE Book_Tags (
     ISBN VARCHAR(20),
@@ -65,6 +72,7 @@ CREATE TABLE Book_Tags (
 ```
 
 ## 6. Copy Table
+
 ```sql
 CREATE TABLE Copy (
     ISBN VARCHAR(20),
@@ -77,6 +85,7 @@ CREATE TABLE Copy (
 ```
 
 ## 7. Review Table
+
 ```sql
 CREATE TABLE Review (
     ISBN VARCHAR(20),
@@ -93,6 +102,7 @@ CREATE TABLE Review (
 ```
 
 ## 8. Reservations Table
+
 ```sql
 CREATE TABLE Reservations (
     reservation_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -105,6 +115,7 @@ CREATE TABLE Reservations (
 ```
 
 ## 9. Loans Table
+
 ```sql
 CREATE TABLE Loans (
     loan_id INT AUTO_INCREMENT PRIMARY KEY,

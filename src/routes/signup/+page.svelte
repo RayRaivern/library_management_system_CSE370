@@ -3,7 +3,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import { enhance } from '$app/forms'; 
+	import { enhance } from '$app/forms';
 
 	let loading = $state(false);
 </script>
