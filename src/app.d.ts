@@ -3,6 +3,14 @@
 declare global {
   namespace App {
     // interface Error {}
+    interface Copies {
+      ISBN: string;
+      barcode: string;
+      status: string;
+      condition: string;
+      acquisition_date: string;
+    }
+
     interface Locals {
       user?: {
         id: number;
@@ -10,6 +18,8 @@ declare global {
         fine_amount: number;
         membership_tier: string;
       };
+
+      copy?: Copies;
     }
     // interface PageData {}
     // interface PageState {}

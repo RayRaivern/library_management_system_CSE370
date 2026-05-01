@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Table from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -14,8 +15,13 @@
 	const book = $derived(data.book);
 	const categories = $derived(data.categories);
 	const reviews = $derived(data.reviews);
+	const copies = $derived(data.copies);
 	const userHasReviewed = $derived(data.userHasReviewed);
 	const user = $derived(data.user);
+
+	const isAnyCopyAvailable = $derived(
+		copies.some((copy: App.Copies) => copy?.status === 'Available')
+	);
 
 	let open = $state(false);
 	let isEditOpen = $state(false);
@@ -44,7 +50,7 @@
 				</div>
 				<div class="space-y-1">
 					<p class="text-sm font-medium text-muted-foreground">Price</p>
-					<p class="text-lg">${book.price || '0.00'}</p>
+					<p class="text-lg">৳ {book.price || '0.00'}</p>
 				</div>
 				<div class="space-y-1">
 					<p class="text-sm font-medium text-muted-foreground">Times Borrowed</p>
@@ -120,9 +126,56 @@
 				</Dialog.Content>
 			</Dialog.Root>
 
-			<Button>Reserve Book</Button>
+			<Button>
+				{isAnyCopyAvailable ? 'Borrow Book' : 'Reserve Book'}
+			</Button>
 		</Card.Footer>
 	</Card.Root>
+</div>
+
+<div class="container mx-auto space-y-8 px-4 py-10">
+	<div class="mx-auto max-w-4xl">
+		<h2 class="mb-6 text-2xl font-bold">Available Copies ({copies.length})</h2>
+
+		<div class="rounded-md border">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Barcode</Table.Head>
+						<Table.Head>Status</Table.Head>
+						<Table.Head>Condition</Table.Head>
+						<Table.Head>Acquisition Date</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each copies as copy}
+						<Table.Row>
+							<Table.Cell class="font-medium">{copy.barcode}</Table.Cell>
+							<Table.Cell>
+								<Badge
+									variant={copy.status?.toLowerCase() === 'available' ? 'default' : 'secondary'}
+								>
+									{copy.status || 'Unknown'}
+								</Badge>
+							</Table.Cell>
+							<Table.Cell>{copy.condition || 'Not specified'}</Table.Cell>
+							<Table.Cell>
+								{copy.acquisition_date
+									? new Date(copy.acquisition_date).toLocaleDateString()
+									: 'N/A'}
+							</Table.Cell>
+						</Table.Row>
+					{:else}
+						<Table.Row>
+							<Table.Cell colspan={4} class="h-24 text-center text-muted-foreground">
+								No physical copies are currently cataloged for this book.
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</div>
+	</div>
 </div>
 
 <div class="container mx-auto space-y-8 px-4 py-10">
@@ -146,11 +199,11 @@
 								<span class="text-sm text-muted-foreground">
 									{new Date(review.date_and_time).toLocaleDateString()}
 								</span>
-								
+
 								{#if user && user.username === review.username}
-									<Button 
-										variant="ghost" 
-										size="sm" 
+									<Button
+										variant="ghost"
+										size="sm"
 										onclick={() => {
 											reviewToEdit = review;
 											isEditOpen = true;
@@ -161,7 +214,7 @@
 								{/if}
 							</div>
 						</div>
-						<Card.Title class="text-lg mt-1">{review.title}</Card.Title>
+						<Card.Title class="mt-1 text-lg">{review.title}</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-md">{review.content}</p>
@@ -204,17 +257,20 @@
 
 				<div class="space-y-2">
 					<Label for="edit-rating">Rating (1-5)</Label>
-					<Input id="edit-rating" name="rating" type="number" min="1" max="5" value={reviewToEdit.rating} required />
+					<Input
+						id="edit-rating"
+						name="rating"
+						type="number"
+						min="1"
+						max="5"
+						value={reviewToEdit.rating}
+						required
+					/>
 				</div>
 
 				<div class="space-y-2">
 					<Label for="edit-content">Your Review</Label>
-					<Textarea
-						id="edit-content"
-						name="content"
-						value={reviewToEdit.content}
-						required
-					/>
+					<Textarea id="edit-content" name="content" value={reviewToEdit.content} required />
 				</div>
 
 				<Dialog.Footer>

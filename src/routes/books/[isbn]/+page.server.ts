@@ -20,6 +20,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       [isbn]
   );
 
+  const [copyRows]: any = await db.query(
+    'SELECT barcode, status, `condition`, acquisition_date FROM Copy WHERE ISBN = ?',
+      [isbn]
+  );
+
   // Feature 7
   const [reviewRows]: any = await db.query(
     `SELECT r.*, u.username 
@@ -36,6 +41,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     book: bookRows[0],
     categories: categoryRows,
     reviews: reviewRows,
+    copies: copyRows,
     userHasReviewed
   };
 };
