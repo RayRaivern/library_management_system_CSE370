@@ -11,6 +11,15 @@ declare global {
 			acquisition_date: string;
 		}
 
+		interface Loan {
+			loan_id: number;
+			barcode: string;
+			user_id: number;
+			borrow_date: Date | string;
+			due_date: Date | string;
+			return_date: Date | string | null;
+		}
+
 		interface Locals {
 			user?: {
 				id: number;

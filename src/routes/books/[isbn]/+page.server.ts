@@ -32,6 +32,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[isbn]
 	);
 
+	// Feature 8 (Checking status of copies by deriving from Loans table)
+	const [loanRows]: any = await db.query(
+		`SELECT l.* FROM Loans l
+   JOIN Copy c ON l.barcode = c.barcode
+   WHERE c.ISBN = ?`,
+		[isbn]
+	);
+
 	const userHasReviewed = locals.user
 		? reviewRows.some((r: any) => r.user_id === locals.user.id)
 		: false;
@@ -41,6 +49,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		categories: categoryRows,
 		reviews: reviewRows,
 		copies: copyRows,
+		loans: loanRows,
 		userHasReviewed
 	};
 };
@@ -133,7 +142,7 @@ export const actions: Actions = {
 				[barcode, userId, borrowDate, dueDate]
 			);
 
-			// 2. Update the status of the specific Copy to 'Loaned'
+			// // 2. Update the status of the specific Copy to 'Loaned'
 			await db.query(`UPDATE Copy SET status = 'Loaned' WHERE barcode = ?`, [barcode]);
 
 			return { success: true, action: 'borrow' };

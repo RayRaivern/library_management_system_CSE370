@@ -18,11 +18,26 @@
 	const copies = $derived(data.copies);
 	const userHasReviewed = $derived(data.userHasReviewed);
 	const user = $derived(data.user);
+	const loans = $derived(data.loans);
 
-	const isAnyCopyAvailable = $derived(
-		copies.some((copy: App.Copies) => copy?.status === 'Available')
+	// variables used for borrowing and reserving books
+	const availableCopies = $derived(
+		copies.filter((copy: App.Copies) => copy.status?.toLowerCase() === 'available')
 	);
 
+	const isAnyCopyAvailable = $derived(availableCopies.length > 0);
+	let selectedBarcode = $state('');
+	$effect(() => {
+		if (availableCopies.length > 0 && !selectedBarcode) {
+			selectedBarcode = availableCopies[0].barcode;
+		}
+	});
+
+	const isUserBorrowing = $derived(
+		user && loans.some((loan: App.Loan) => loan.user_id === user.id && loan.return_date === null)
+	);
+
+	// variables used for reviews
 	let open = $state(false);
 	let isEditOpen = $state(false);
 	let reviewToEdit = $state<any>(null);
@@ -126,55 +141,73 @@
 				</Dialog.Content>
 			</Dialog.Root>
 
-			<Button>
-				{isAnyCopyAvailable ? 'Borrow Book' : 'Reserve Book'}
-			</Button>
+			{#if isUserBorrowing}
+				<Button disabled variant="secondary">Already Borrowing</Button>
+			{:else if isAnyCopyAvailable}
+				<Button disabled variant="outline">Reserve Book</Button>
+			{:else}
+				<form method="POST" action="?/reserveBook" use:enhance>
+					<Button type="submit">Reserve Book</Button>
+				</form>
+			{/if}
 		</Card.Footer>
 	</Card.Root>
 </div>
 
-<div class="container mx-auto space-y-8 px-4 py-10">
-	<div class="mx-auto max-w-4xl">
-		<h2 class="mb-6 text-2xl font-bold">Available Copies ({copies.length})</h2>
+<div class="mx-auto max-w-4xl">
+	<h2 class="mb-6 text-2xl font-bold">Physical Copies ({copies.length})</h2>
 
-		<div class="rounded-md border">
-			<Table.Root>
-				<Table.Header>
+	<div class="rounded-md border">
+		<Table.Root>
+			<Table.Header>
+				<Table.Row>
+					<Table.Head>Barcode</Table.Head>
+					<Table.Head>Condition</Table.Head>
+					<Table.Head>Acquisition Date</Table.Head>
+					<Table.Head>Due Date</Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each copies as copy}
+					{@const activeLoan = data.loans?.find(
+						(l: App.Loan) => l.barcode === copy.barcode && !l.return_date
+					)}
+
 					<Table.Row>
-						<Table.Head>Barcode</Table.Head>
-						<Table.Head>Status</Table.Head>
-						<Table.Head>Condition</Table.Head>
-						<Table.Head>Acquisition Date</Table.Head>
+						<Table.Cell class="font-medium">{copy.barcode}</Table.Cell>
+						<Table.Cell>{copy.condition || 'Not specified'}</Table.Cell>
+						<Table.Cell>
+							{copy.acquisition_date ? new Date(copy.acquisition_date).toLocaleDateString() : 'N/A'}
+						</Table.Cell>
+						<Table.Cell>
+							{#if activeLoan}
+								<span class="font-medium text-destructive">
+									{new Date(activeLoan.due_date).toLocaleDateString()}
+								</span>
+							{:else}
+								<span class="text-muted-foreground">N/A</span>
+							{/if}
+						</Table.Cell>
+						<Table.Cell>
+							{#if copy.status?.toLowerCase() === 'available'}
+								<form method="POST" action="?/borrowBook" use:enhance>
+									<input type="hidden" name="barcode" value={copy.barcode} />
+									<Button size="sm" type="submit">Borrow</Button>
+								</form>
+							{:else}
+								<Button size="sm" variant="outline">Loaned</Button>
+							{/if}
+						</Table.Cell>
 					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#each copies as copy}
-						<Table.Row>
-							<Table.Cell class="font-medium">{copy.barcode}</Table.Cell>
-							<Table.Cell>
-								<Badge
-									variant={copy.status?.toLowerCase() === 'available' ? 'default' : 'secondary'}
-								>
-									{copy.status || 'Unknown'}
-								</Badge>
-							</Table.Cell>
-							<Table.Cell>{copy.condition || 'Not specified'}</Table.Cell>
-							<Table.Cell>
-								{copy.acquisition_date
-									? new Date(copy.acquisition_date).toLocaleDateString()
-									: 'N/A'}
-							</Table.Cell>
-						</Table.Row>
-					{:else}
-						<Table.Row>
-							<Table.Cell colspan={4} class="h-24 text-center text-muted-foreground">
-								No physical copies are currently cataloged for this book.
-							</Table.Cell>
-						</Table.Row>
-					{/each}
-				</Table.Body>
-			</Table.Root>
-		</div>
+				{:else}
+					<Table.Row>
+						<Table.Cell colspan={5} class="h-24 text-center text-muted-foreground">
+							No physical copies are currently cataloged for this book.
+						</Table.Cell>
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
 	</div>
 </div>
 
