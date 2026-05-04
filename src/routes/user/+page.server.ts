@@ -22,14 +22,17 @@ export const load: PageServerLoad = async ({ locals }) => {
         [userId]
     );
 
+    // ✅ NEW: get borrow_limit from Membership_Tiers
     const [tierRows]: any = await db.query(
-        `SELECT borrow_limit 
-         FROM Membership_Tiers 
-         WHERE tier_name = ?`,
-        [locals.user.membership_tier]
+        `SELECT mt.borrow_limit
+         FROM User u
+         JOIN Membership_Tiers mt 
+         ON u.membership_tier = mt.tier_name
+         WHERE u.id = ?`,
+        [userId]
     );
 
-    const borrow_limit = tierRows.length > 0 ? tierRows[0].borrow_limit : 0;
+    const borrow_limit = tierRows[0]?.borrow_limit ?? 0;
 
     return {
         user: locals.user,
