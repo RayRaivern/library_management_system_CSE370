@@ -22,8 +22,18 @@ export const load: PageServerLoad = async ({ locals }) => {
         [userId]
     );
 
+    const [tierRows]: any = await db.query(
+        `SELECT borrow_limit 
+         FROM Membership_Tiers 
+         WHERE tier_name = ?`,
+        [locals.user.membership_tier]
+    );
+
+    const borrow_limit = tierRows.length > 0 ? tierRows[0].borrow_limit : 0;
+
     return {
         user: locals.user,
-        history: historyRows
+        history: historyRows,
+        borrow_limit
     };
 };
