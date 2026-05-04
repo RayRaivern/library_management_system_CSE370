@@ -1,10 +1,7 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
-
 export const load: PageServerLoad = async ({ locals }) => {
-
     const userId = locals.user.id;
-
     const [historyRows]: any = await db.query(
         `SELECT 
             l.loan_id,
@@ -21,8 +18,6 @@ export const load: PageServerLoad = async ({ locals }) => {
         ORDER BY l.borrow_date DESC`,
         [userId]
     );
-
-    // ✅ NEW: get borrow_limit from Membership_Tiers
     const [tierRows]: any = await db.query(
         `SELECT mt.borrow_limit
          FROM User u
@@ -31,12 +26,25 @@ export const load: PageServerLoad = async ({ locals }) => {
          WHERE u.id = ?`,
         [userId]
     );
-
     const borrow_limit = tierRows[0]?.borrow_limit ?? 0;
+
+    const [reservationRows]: any = await db.query(
+        `SELECT 
+            r.reservation_id,
+            r.reserve_date,
+            b.name AS title,
+            b.author
+        FROM Reservations r
+        JOIN Book b ON r.ISBN = b.ISBN
+        WHERE r.user_id = ?
+        ORDER BY r.reserve_date DESC`,
+        [userId]
+    );
 
     return {
         user: locals.user,
         history: historyRows,
-        borrow_limit
+        borrow_limit,
+        reservations: reservationRows
     };
 };
