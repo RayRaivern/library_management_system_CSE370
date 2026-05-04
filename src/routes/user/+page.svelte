@@ -5,22 +5,11 @@
 	import { Separator } from '$lib/components/ui/separator';
 
 	// TODO: replace with real data fetched from your backend
-	const user = {
-		username: 'Anas',
-		membership_tier: 'Standard', // e.g. Standard | Premium
-		borrow_limit: 3
-	};
+	const user = data.user;
 
-	const borrowed_books = [
-		{ id: 1, title: 'Clean Code', author: 'Robert C. Martin', due_date: '2025-05-01', fine: 0 },
-		{
-			id: 2,
-			title: 'The Pragmatic Programmer',
-			author: 'David Thomas',
-			due_date: '2025-04-20',
-			fine: 2.5
-		}
-	];
+	let { data } = $props();
+
+	const borrowed_books = data.history;
 
 	const reserved_books = [
 		{
@@ -32,7 +21,7 @@
 	];
 
 	// Derive total outstanding fine
-	const total_fine = borrowed_books.reduce((sum, b) => sum + b.fine, 0);
+	const total_fine = 0;
 
 	function formatDate(dateStr: string) {
 		return new Date(dateStr).toLocaleDateString('en-GB', {
