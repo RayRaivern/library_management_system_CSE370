@@ -38,7 +38,7 @@
 				<h1 class="text-2xl font-semibold tracking-tight">Welcome back, {user.username}</h1>
 				<p class="text-sm text-muted-foreground">Joined on {formatDate(user.join_date)}</p>
 			</div>
-			<Button variant="outline" href="/history">View Borrowing History</Button>
+			<Button variant="outline" href="user/history">View Borrowing History</Button>
 		</div>
 
 		<Separator />

@@ -91,6 +91,7 @@
                 </Card.Content>
                 <Card.Footer>
                     <Badge variant="secondary">{book.times_borrowed} borrows</Badge>
+                    <Button class="ml-auto mr-2" href="/books/{book.ISBN}">Details</Button>
                 </Card.Footer>
             </Card.Root>
         {:else}
