@@ -121,12 +121,13 @@ export const actions: Actions = {
 		}
 	},
 
-	borrowBook: async ({ request, locals }) => {
+	borrowBook: async ({ params, request, locals }) => {
 		if (!locals.user) throw redirect(303, '/login');
 
 		const data = await request.formData();
 		const barcode = data.get('barcode');
 		const userId = locals.user.id;
+		const isbn = params.isbn;
 
 		if (!barcode) return fail(400, { message: 'Barcode is required.' });
 
@@ -156,6 +157,8 @@ export const actions: Actions = {
 			);
 
 			await db.query(`UPDATE Copy SET status = 'Loaned' WHERE barcode = ?`, [barcode]);
+
+			await db.query(`UPDATE Book SET times_borrowed = times_borrowed + 1 WHERE ISBN = ?`, [isbn]);
 
 			return { success: true, action: 'borrow' };
 		} catch (err) {
