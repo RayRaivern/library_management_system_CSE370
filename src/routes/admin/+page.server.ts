@@ -1,38 +1,42 @@
 import { db } from '$lib/server/db';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const userId = locals.user.id;
+	// Basic Admin Check (referencing your 'admin' tinyint column)
+	if (!locals.user || !locals.user.admin) {
+		throw error(403, 'Forbidden: Admin access only');
+	}
 
-	// 1. Get full User details
-	const [userRows]: any = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
+	// Fetch all users and their tier limits
+	const [users]: any = await db.query(`
+        SELECT u.*, m.borrow_limit, m.reservation_limit 
+        FROM User u
+        LEFT JOIN Membership_Tiers m ON u.membership_tier = m.tier_name
+    `);
 
-	// 2. Get all Loans with Book/Copy details
-	const [loanRows]: any = await db.query(
-		`SELECT l.*, b.name as title, b.author 
-         FROM Loans l
-         JOIN Copy c ON l.barcode = c.barcode
-         JOIN Book b ON c.ISBN = b.ISBN
-         WHERE l.user_id = ?
-         ORDER BY l.borrow_date DESC`,
-		[userId]
-	);
+	// Fetch ALL active loans (not returned) to filter in the frontend
+	const [activeLoans]: any = await db.query(`
+        SELECT l.*, b.name as title, u.id as user_id
+        FROM Loans l
+        JOIN Copy c ON l.barcode = c.barcode
+        JOIN Book b ON c.ISBN = b.ISBN
+        JOIN User u ON l.user_id = u.id
+        WHERE l.return_date IS NULL
+    `);
 
-	// 3. Get all Reservations with Book details
-	const [reservationRows]: any = await db.query(
-		`SELECT r.*, b.name as title, b.author
-         FROM Reservations r
-         JOIN Book b ON r.ISBN = b.ISBN
-         WHERE r.user_id = ?
-         ORDER BY r.reserve_date DESC`,
-		[userId]
-	);
+	// Fetch ALL active reservations
+	const [activeReservations]: any = await db.query(`
+        SELECT r.*, b.name as title, u.id as user_id
+        FROM Reservations r
+        JOIN Book b ON r.ISBN = b.ISBN
+        JOIN User u ON r.user_id = u.id
+    `);
 
 	return {
-		// Return the full user object from DB (includes fine_amount, membership_tier, etc.)
-		user: userRows[0] || locals.user,
-		loans: loanRows,
-		reservations: reservationRows
+		allUsers: users,
+		allLoans: activeLoans,
+		allReservations: activeReservations
 	};
 };
 

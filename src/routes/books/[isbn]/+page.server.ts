@@ -59,7 +59,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		reviews: reviewRows,
 		copies: copyRows,
 		loans: loanRows,
-    userHasReserved,
+		userHasReserved,
 		userHasReviewed
 	};
 };

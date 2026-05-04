@@ -3,6 +3,8 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Separator } from '$lib/components/ui/separator';
+	import { enhance } from '$app/forms';
+	import { LogOut } from '@lucide/svelte';
 
 	// Access the data returned from +page.server.ts
 	let { data } = $props();
@@ -54,7 +56,7 @@
 				<Card.Content class="pt-6">
 					<p class="text-xs tracking-wide text-muted-foreground uppercase">Active Loans</p>
 					<p class="mt-1 text-xl font-semibold">
-						{borrowed_books.filter((b) => !b.return_date).length}
+						{borrowed_books.filter((b: any) => !b.return_date).length}
 						<!-- Note: Borrow limit is available in Membership_Tiers table if joined, 
                              otherwise using a placeholder or local data -->
 					</p>
@@ -135,5 +137,18 @@
 				{/if}
 			</Card.Content>
 		</Card.Root>
+
+		<div class="mt-12 pb-10">
+			<form method="POST" action="/logout" use:enhance>
+				<Button
+					type="submit"
+					variant="destructive"
+					class="flex items-center justify-center gap-3 py-8 text-xl font-bold shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99]"
+				>
+					<LogOut class="h-6 w-6" />
+					Logout
+				</Button>
+			</form>
+		</div>
 	</div>
 </div>
