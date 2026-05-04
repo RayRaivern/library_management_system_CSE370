@@ -57,8 +57,6 @@
 					<p class="text-xs tracking-wide text-muted-foreground uppercase">Active Loans</p>
 					<p class="mt-1 text-xl font-semibold">
 						{borrowed_books.filter((b: any) => !b.return_date).length}
-						<!-- Note: Borrow limit is available in Membership_Tiers table if joined, 
-                             otherwise using a placeholder or local data -->
 					</p>
 				</Card.Content>
 			</Card.Root>

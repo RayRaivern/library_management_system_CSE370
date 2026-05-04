@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Progress } from '$lib/components/ui/progress';
-  import { Button } from '$lib/components/ui/button';
+	import { Button } from '$lib/components/ui/button';
 	import { Trophy, ArrowRight } from '@lucide/svelte';
 
 	let { data } = $props();

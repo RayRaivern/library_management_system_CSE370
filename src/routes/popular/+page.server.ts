@@ -2,9 +2,9 @@ import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-    // 1. Fetch top 10 books by popularity
-    // We group by ISBN to handle the join with tags correctly
-    const [books]: any = await db.query(`
+	// 1. Fetch top 10 books by popularity
+	// We group by ISBN to handle the join with tags correctly
+	const [books]: any = await db.query(`
         SELECT 
             b.ISBN, 
             b.name, 
@@ -18,11 +18,11 @@ export const load: PageServerLoad = async () => {
         LIMIT 10
     `);
 
-    return {
-        popularBooks: books.map((book: any) => ({
-            ...book,
-            // Convert the comma-separated string from GROUP_CONCAT into an array
-            tags: book.tags ? book.tags.split(',') : []
-        }))
-    };
+	return {
+		popularBooks: books.map((book: any) => ({
+			...book,
+			// Convert the comma-separated string from GROUP_CONCAT into an array
+			tags: book.tags ? book.tags.split(',') : []
+		}))
+	};
 };

@@ -50,17 +50,42 @@ export const actions: Actions = {
 
 		if (!barcode || !loanId) return fail(400, { message: 'Missing info' });
 
-		const today = new Date().toISOString().slice(0, 10);
+		const today = new Date();
+		const todayStr = today.toISOString().slice(0, 10);
 
 		try {
-			// 1. Mark the current loan as returned
-			await db.query('UPDATE Loans SET return_date = ? WHERE loan_id = ?', [today, loanId]);
+			// 1. Fetch current loan info to check for overdue status
+			const [loanRows]: any = await db.query(
+				'SELECT user_id, due_date FROM Loans WHERE loan_id = ?',
+				[loanId]
+			);
 
-			// 2. Find the ISBN of this book to check for reservations
+			if (loanRows.length === 0) return fail(404, { message: 'Loan record not found' });
+
+			const { user_id, due_date } = loanRows[0];
+			const dueDate = new Date(due_date);
+
+			// 2. Calculate fine if overdue (+100 per day)
+			if (today > dueDate) {
+				const diffTime = Math.abs(today.getTime() - dueDate.getTime());
+				const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+				const fineIncrease = diffDays * 100;
+
+				// Update the User's fine_amount in the User table
+				await db.query('UPDATE User SET fine_amount = fine_amount + ? WHERE id = ?', [
+					fineIncrease,
+					user_id
+				]);
+			}
+
+			// 3. Mark the current loan as returned
+			await db.query('UPDATE Loans SET return_date = ? WHERE loan_id = ?', [todayStr, loanId]);
+
+			// 4. Find the ISBN of this book to check for reservations
 			const [copyInfo]: any = await db.query('SELECT ISBN FROM Copy WHERE barcode = ?', [barcode]);
 			const isbn = copyInfo[0].ISBN;
 
-			// 3. Check for the earliest reservation for this ISBN
+			// 5. Check for the earliest reservation for this ISBN[cite: 1]
 			const [reservations]: any = await db.query(
 				'SELECT * FROM Reservations WHERE ISBN = ? ORDER BY reserve_date ASC LIMIT 1',
 				[isbn]
@@ -68,28 +93,33 @@ export const actions: Actions = {
 
 			if (reservations.length > 0) {
 				const nextUser = reservations[0];
-				const dueDateObj = new Date();
-				dueDateObj.setDate(dueDateObj.getDate() + 14);
-				const dueDate = dueDateObj.toISOString().slice(0, 10);
+				const nextDueDateObj = new Date();
+				nextDueDateObj.setDate(nextDueDateObj.getDate() + 14);
+				const nextDueDate = nextDueDateObj.toISOString().slice(0, 10);
 
-				// 4. Automatically create a new loan for the reserving user
+				// 6. Automatically create a new loan for the reserving user[cite: 1]
 				await db.query(
 					`INSERT INTO Loans (barcode, user_id, borrow_date, due_date) 
-                 VALUES (?, ?, ?, ?)`,
-					[barcode, nextUser.user_id, today, dueDate]
+                     VALUES (?, ?, ?, ?)`,
+					[barcode, nextUser.user_id, todayStr, nextDueDate]
 				);
 
-				// 5. Delete the reservation now that it has been fulfilled[cite: 1]
+				// 7. Delete the reservation now that it has been fulfilled[cite: 1]
 				await db.query('DELETE FROM Reservations WHERE reservation_id = ?', [
 					nextUser.reservation_id
 				]);
 
-				// Note: The Copy status remains 'Loaned' because it went from one user to another[cite: 1]
-				return { success: true, message: 'Book returned and assigned to next reserver.' };
+				return {
+					success: true,
+					message: 'Book returned. Fine calculated if overdue. Assigned to next reserver.'
+				};
 			} else {
-				// 6. No reservations? Set the status back to Available[cite: 1]
+				// 8. No reservations? Set the status back to Available[cite: 1]
 				await db.query("UPDATE Copy SET status = 'Available' WHERE barcode = ?", [barcode]);
-				return { success: true, message: 'Book returned and is now Available.' };
+				return {
+					success: true,
+					message: 'Book returned. Fine calculated if overdue. Status: Available.'
+				};
 			}
 		} catch (err) {
 			console.error(err);
