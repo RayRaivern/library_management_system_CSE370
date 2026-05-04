@@ -41,8 +41,9 @@ export const load: PageServerLoad = async ({ locals }) => {
         [userId]
     );
 
+    const { admin, ...safeUser } = locals.user;
     return {
-        user: locals.user,
+        user: safeUser,
         history: historyRows,
         borrow_limit,
         reservations: reservationRows
