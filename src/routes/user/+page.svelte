@@ -8,20 +8,13 @@
 
 	const user = data.user;
 
-	// Full history
 	const history = data.history;
 
-	// Only currently borrowed (NOT returned)
 	const borrowed_books = history.filter((b) => !b.return_date);
 
-	const reserved_books = [
-		{
-			id: 3,
-			title: 'Designing Data-Intensive Applications',
-			author: 'Martin Kleppmann',
-			reserved_on: '2025-04-22'
-		}
-	];
+	const reserved_books = data.reservations;
+
+	const FINE_RATE = 0.50;
 
 	function formatDate(dateStr: string) {
 		return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -43,13 +36,13 @@
 			const returned = new Date(return_date);
 			if (returned <= due) return 0;
 			const diff = (returned.getTime() - due.getTime()) / (1000 * 60 * 60 * 24);
-			return Math.ceil(diff);
+			return Math.ceil(diff) * FINE_RATE;
 		}
 
 		if (today <= due) return 0;
 
 		const diff = (today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24);
-		return Math.ceil(diff);
+		return Math.ceil(diff) * FINE_RATE;
 	}
 
 	const total_fine = history.reduce(
@@ -92,8 +85,8 @@
 					<p class="mt-1 text-xl font-semibold">
 						{borrowed_books.length}
 						<span class="text-sm font-normal text-muted-foreground">
-										/ {data.borrow_limit}
-									</span>
+							/ {data.borrow_limit}
+						</span>
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -146,7 +139,7 @@
 
 									{#if calculateFine(book.due_date, book.return_date) > 0}
 										<span class="text-xs text-destructive">
-											Fine: ${calculateFine(book.due_date, book.return_date)}
+											Fine: ${calculateFine(book.due_date, book.return_date).toFixed(2)}
 										</span>
 									{/if}
 								</div>
@@ -157,7 +150,7 @@
 			</Card.Content>
 		</Card.Root>
 
-		<!-- Reserved (unchanged) -->
+		<!-- Currently Reserved -->
 		<Card.Root class="shadow-sm">
 			<Card.Header>
 				<Card.Title class="text-base">Currently Reserving</Card.Title>
@@ -183,7 +176,7 @@
 								<div class="flex flex-col items-end gap-1">
 									<Badge variant="outline">Reserved</Badge>
 									<span class="text-xs text-muted-foreground">
-										Since {formatDate(book.reserved_on)}
+										Since {formatDate(book.reserve_date)}
 									</span>
 								</div>
 							</div>
