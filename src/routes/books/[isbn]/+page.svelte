@@ -37,6 +37,8 @@
 		user && loans.some((loan: App.Loan) => loan.user_id === user.id && loan.return_date === null)
 	);
 
+  const userHasReserved = $derived(data.userHasReserved);
+
 	// variables used for reviews
 	let open = $state(false);
 	let isEditOpen = $state(false);
@@ -145,6 +147,8 @@
 				<Button disabled variant="secondary">Already Borrowing</Button>
 			{:else if isAnyCopyAvailable}
 				<Button disabled variant="outline">Reserve Book</Button>
+      {:else if userHasReserved}
+				<Button disabled variant="secondary">Already Reserved</Button>
 			{:else}
 				<form method="POST" action="?/reserveBook" use:enhance>
 					<Button type="submit">Reserve Book</Button>

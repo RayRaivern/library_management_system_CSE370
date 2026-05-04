@@ -4,37 +4,16 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Separator } from '$lib/components/ui/separator';
 
-	// TODO: replace with real data fetched from your backend
-	const user = {
-		username: 'Anas',
-		membership_tier: 'Standard', // e.g. Standard | Premium
-		borrow_limit: 3
-	};
+	// Access the data returned from +page.server.ts
+	let { data } = $props();
 
-	const borrowed_books = [
-		{ id: 1, title: 'Clean Code', author: 'Robert C. Martin', due_date: '2025-05-01', fine: 0 },
-		{
-			id: 2,
-			title: 'The Pragmatic Programmer',
-			author: 'David Thomas',
-			due_date: '2025-04-20',
-			fine: 2.5
-		}
-	];
+	// Deconstruct for easier access
+	const user = $derived(data.user);
+	const borrowed_books = $derived(data.loans || []);
+	const reserved_books = $derived(data.reservations || []);
 
-	const reserved_books = [
-		{
-			id: 3,
-			title: 'Designing Data-Intensive Applications',
-			author: 'Martin Kleppmann',
-			reserved_on: '2025-04-22'
-		}
-	];
-
-	// Derive total outstanding fine
-	const total_fine = borrowed_books.reduce((sum, b) => sum + b.fine, 0);
-
-	function formatDate(dateStr: string) {
+	function formatDate(dateStr: string | null) {
+		if (!dateStr) return 'N/A';
 		return new Date(dateStr).toLocaleDateString('en-GB', {
 			day: 'numeric',
 			month: 'short',
@@ -42,8 +21,10 @@
 		});
 	}
 
-	function isOverdue(dateStr: string) {
-		return new Date(dateStr) < new Date();
+	function isOverdue(dueDateStr: string | null) {
+		if (!dueDateStr) return false;
+		// Only mark as overdue if it hasn't been returned yet
+		return new Date(dueDateStr) < new Date();
 	}
 </script>
 
@@ -53,17 +34,15 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h1 class="text-2xl font-semibold tracking-tight">Welcome back, {user.username}</h1>
-				<p class="text-sm text-muted-foreground">Here's an overview of your library activity.</p>
+				<p class="text-sm text-muted-foreground">Joined on {formatDate(user.join_date)}</p>
 			</div>
-			<Button variant="outline" onclick={() => (window.location.href = '/history')}>
-				View Borrowing History
-			</Button>
+			<Button variant="outline" href="/history">View Borrowing History</Button>
 		</div>
 
 		<Separator />
 
 		<!-- Stats row -->
-		<div class="grid grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 			<Card.Root class="shadow-sm">
 				<Card.Content class="pt-6">
 					<p class="text-xs tracking-wide text-muted-foreground uppercase">Membership Tier</p>
@@ -73,19 +52,23 @@
 
 			<Card.Root class="shadow-sm">
 				<Card.Content class="pt-6">
-					<p class="text-xs tracking-wide text-muted-foreground uppercase">Books Borrowed</p>
+					<p class="text-xs tracking-wide text-muted-foreground uppercase">Active Loans</p>
 					<p class="mt-1 text-xl font-semibold">
-						{borrowed_books.length}
-						<span class="text-sm font-normal text-muted-foreground">/ {user.borrow_limit}</span>
+						{borrowed_books.filter((b) => !b.return_date).length}
+						<!-- Note: Borrow limit is available in Membership_Tiers table if joined, 
+                             otherwise using a placeholder or local data -->
 					</p>
 				</Card.Content>
 			</Card.Root>
 
-			<Card.Root class="shadow-sm {total_fine > 0 ? 'border-destructive' : ''}">
+			<Card.Root class="shadow-sm {Number(user.fine_amount) > 0 ? 'border-destructive' : ''}">
 				<Card.Content class="pt-6">
 					<p class="text-xs tracking-wide text-muted-foreground uppercase">Outstanding Fine</p>
-					<p class="mt-1 text-xl font-semibold" class:text-destructive={total_fine > 0}>
-						${total_fine.toFixed(2)}
+					<p
+						class="mt-1 text-xl font-semibold"
+						class:text-destructive={Number(user.fine_amount) > 0}
+					>
+						${Number(user.fine_amount).toFixed(2)}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -94,27 +77,27 @@
 		<!-- Currently Borrowed -->
 		<Card.Root class="shadow-sm">
 			<Card.Header>
-				<Card.Title class="text-base">Currently Borrowing</Card.Title>
-				<Card.Description>Books you have checked out right now.</Card.Description>
+				<Card.Title class="text-base">Current Loans</Card.Title>
+				<Card.Description>Books you are currently responsible for.</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				{#if borrowed_books.length === 0}
-					<p class="text-sm text-muted-foreground">You have no books checked out.</p>
+				<!-- Filter to only show books that haven't been returned yet -->
+				{@const activeLoans = borrowed_books.filter((b: any) => !b.return_date)}
+				{#if activeLoans.length === 0}
+					<p class="text-sm text-muted-foreground">You have no active loans.</p>
 				{:else}
 					<div class="space-y-3">
-						{#each borrowed_books as book}
+						{#each activeLoans as loan}
 							<div class="flex items-center justify-between rounded-md border px-4 py-3">
 								<div>
-									<p class="text-sm font-medium">{book.title}</p>
-									<p class="text-xs text-muted-foreground">{book.author}</p>
+									<p class="text-sm font-medium">{loan.title}</p>
+									<p class="text-xs text-muted-foreground">{loan.author}</p>
+									<p class="mt-1 text-[10px] text-muted-foreground">Barcode: {loan.barcode}</p>
 								</div>
 								<div class="flex flex-col items-end gap-1">
-									<Badge variant={isOverdue(book.due_date) ? 'destructive' : 'secondary'}>
-										{isOverdue(book.due_date) ? 'Overdue' : `Due ${formatDate(book.due_date)}`}
+									<Badge variant={isOverdue(loan.due_date) ? 'destructive' : 'secondary'}>
+										{isOverdue(loan.due_date) ? 'Overdue' : `Due ${formatDate(loan.due_date)}`}
 									</Badge>
-									{#if book.fine > 0}
-										<span class="text-xs text-destructive">Fine: ${book.fine.toFixed(2)}</span>
-									{/if}
 								</div>
 							</div>
 						{/each}
@@ -126,25 +109,25 @@
 		<!-- Currently Reserved -->
 		<Card.Root class="shadow-sm">
 			<Card.Header>
-				<Card.Title class="text-base">Currently Reserving</Card.Title>
-				<Card.Description>Books you have reserved and are waiting for.</Card.Description>
+				<Card.Title class="text-base">Active Reservations</Card.Title>
+				<Card.Description>Books waiting for you to pick up.</Card.Description>
 			</Card.Header>
 			<Card.Content>
 				{#if reserved_books.length === 0}
 					<p class="text-sm text-muted-foreground">You have no active reservations.</p>
 				{:else}
 					<div class="space-y-3">
-						{#each reserved_books as book}
+						{#each reserved_books as res}
 							<div class="flex items-center justify-between rounded-md border px-4 py-3">
 								<div>
-									<p class="text-sm font-medium">{book.title}</p>
-									<p class="text-xs text-muted-foreground">{book.author}</p>
+									<p class="text-sm font-medium">{res.title}</p>
+									<p class="text-xs text-muted-foreground">{res.author}</p>
 								</div>
 								<div class="flex flex-col items-end gap-1">
-									<Badge variant="outline">Reserved</Badge>
-									<span class="text-xs text-muted-foreground"
-										>Since {formatDate(book.reserved_on)}</span
-									>
+									<Badge variant="outline" class="border-primary text-primary">Reserved</Badge>
+									<span class="text-xs text-muted-foreground">
+										Since {formatDate(res.reserve_date)}
+									</span>
 								</div>
 							</div>
 						{/each}

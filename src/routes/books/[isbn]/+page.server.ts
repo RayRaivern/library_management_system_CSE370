@@ -40,6 +40,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[isbn]
 	);
 
+	const [reservationRows]: any = locals.user
+		? await db.query('SELECT * FROM Reservations WHERE ISBN = ? AND user_id = ?', [
+				isbn,
+				locals.user.id
+			])
+		: [[]];
+
+	const userHasReserved = reservationRows.length > 0;
+
 	const userHasReviewed = locals.user
 		? reviewRows.some((r: any) => r.user_id === locals.user.id)
 		: false;
@@ -50,6 +59,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		reviews: reviewRows,
 		copies: copyRows,
 		loans: loanRows,
+    userHasReserved,
 		userHasReviewed
 	};
 };

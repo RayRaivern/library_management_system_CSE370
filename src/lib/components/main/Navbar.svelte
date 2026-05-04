@@ -9,7 +9,7 @@
 	const navLinks = [
 		{ label: 'Home', href: '/' },
 		{ label: 'Advanced Search', href: '/search' },
-		{ label: 'Browse Books', href: '/books' },
+		{ label: 'Browse Books', href: '/books/browse' },
 		{ label: 'Browse Authors', href: '/authors' },
 		{ label: 'Popular Books', href: '/popular' }
 	];
