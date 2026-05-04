@@ -139,7 +139,7 @@
 		</Card.Root>
 
 		<div class="mt-12 pb-10">
-			<form method="POST" action="/logout" use:enhance>
+			<form method="POST" action="?/logout" use:enhance>
 				<Button
 					type="submit"
 					variant="destructive"

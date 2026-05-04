@@ -122,70 +122,84 @@ export const actions: Actions = {
 	},
 
 	borrowBook: async ({ request, locals }) => {
-		// Check if logged in
-		if (!locals.user) {
-			throw redirect(303, '/login');
-		}
+		if (!locals.user) throw redirect(303, '/login');
 
 		const data = await request.formData();
-		// The frontend needs to pass the specific barcode of the copy being borrowed
 		const barcode = data.get('barcode');
 		const userId = locals.user.id;
 
-		if (!barcode) {
-			return fail(400, { message: 'A specific copy barcode is required to borrow.' });
-		}
-
-		// Format dates for MySQL DATE type (YYYY-MM-DD)
-		const borrowDate = new Date().toISOString().slice(0, 10);
-
-		// Set a default due date (e.g., 14 days from now)
-		const dueDateObj = new Date();
-		dueDateObj.setDate(dueDateObj.getDate() + 14);
-		const dueDate = dueDateObj.toISOString().slice(0, 10);
+		if (!barcode) return fail(400, { message: 'Barcode is required.' });
 
 		try {
-			// 1. Insert into Loans table
+			// 1. Get User's Membership Limit and Current Active Loan Count
+			const [userLimit]: any = await db.query(
+				`SELECT m.borrow_limit, (SELECT COUNT(*) FROM Loans WHERE user_id = ? AND return_date IS NULL) as current_loans
+                 FROM User u JOIN Membership_Tiers m ON u.membership_tier = m.tier_name
+                 WHERE u.id = ?`,
+				[userId, userId]
+			);
+
+			if (userLimit[0].current_loans >= userLimit[0].borrow_limit) {
+				return fail(400, {
+					message: `Borrowing limit reached (${userLimit[0].borrow_limit} books).`
+				});
+			}
+
+			const borrowDate = new Date().toISOString().slice(0, 10);
+			const dueDateObj = new Date();
+			dueDateObj.setDate(dueDateObj.getDate() + 14);
+			const dueDate = dueDateObj.toISOString().slice(0, 10);
+
 			await db.query(
-				`INSERT INTO Loans (barcode, user_id, borrow_date, due_date) 
-      VALUES (?, ?, ?, ?)`,
+				`INSERT INTO Loans (barcode, user_id, borrow_date, due_date) VALUES (?, ?, ?, ?)`,
 				[barcode, userId, borrowDate, dueDate]
 			);
 
-			// // 2. Update the status of the specific Copy to 'Loaned'
 			await db.query(`UPDATE Copy SET status = 'Loaned' WHERE barcode = ?`, [barcode]);
 
 			return { success: true, action: 'borrow' };
 		} catch (err) {
-			console.error(err);
 			return fail(500, { message: 'Failed to process the loan.' });
 		}
 	},
 
-	// Reserve book (when no copies are available)
 	reserveBook: async ({ params, locals }) => {
-		// Check if logged in
-		if (!locals.user) {
-			throw redirect(303, '/login');
-		}
+		if (!locals.user) throw redirect(303, '/login');
 
 		const isbn = params.isbn;
 		const userId = locals.user.id;
 
-		// Format date for MySQL DATE type (YYYY-MM-DD)
-		const reserveDate = new Date().toISOString().slice(0, 10);
-
 		try {
-			// Insert into Reservations table
-			await db.query(
-				`INSERT INTO Reservations (ISBN, user_id, reserve_date) 
-      VALUES (?, ?, ?)`,
-				[isbn, userId, reserveDate]
+			// 1. Get User's Membership Limit and Current Active Reservation Count
+			const [userLimit]: any = await db.query(
+				`SELECT m.reservation_limit, (SELECT COUNT(*) FROM Reservations WHERE user_id = ?) as current_reservations
+                 FROM User u JOIN Membership_Tiers m ON u.membership_tier = m.tier_name
+                 WHERE u.id = ?`,
+				[userId, userId]
 			);
+
+			if (userLimit[0].current_reservations >= userLimit[0].reservation_limit) {
+				return fail(400, {
+					message: `Reservation limit reached (${userLimit[0].reservation_limit} books).`
+				});
+			}
+
+			// 2. Prevent duplicate reservation for the same book[cite: 2]
+			const [existing]: any = await db.query(
+				'SELECT 1 FROM Reservations WHERE ISBN = ? AND user_id = ?',
+				[isbn, userId]
+			);
+			if (existing.length > 0) return fail(400, { message: 'Already reserved.' });
+
+			const reserveDate = new Date().toISOString().slice(0, 10);
+			await db.query(`INSERT INTO Reservations (ISBN, user_id, reserve_date) VALUES (?, ?, ?)`, [
+				isbn,
+				userId,
+				reserveDate
+			]);
 
 			return { success: true, action: 'reserve' };
 		} catch (err) {
-			console.error(err);
 			return fail(500, { message: 'Failed to process the reservation.' });
 		}
 	}

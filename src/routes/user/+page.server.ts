@@ -1,5 +1,6 @@
 import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
+import { redirect, fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = locals.user.id;
@@ -37,59 +38,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	returnBook: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { message: 'Unauthorized' });
-
-		const data = await request.formData();
-		const barcode = data.get('barcode');
-		const loanId = data.get('loan_id');
-
-		if (!barcode || !loanId) return fail(400, { message: 'Missing info' });
-
-		const today = new Date().toISOString().slice(0, 10);
-
-		try {
-			// 1. Mark the current loan as returned
-			await db.query('UPDATE Loans SET return_date = ? WHERE loan_id = ?', [today, loanId]);
-
-			// 2. Find the ISBN of this book to check for reservations
-			const [copyInfo]: any = await db.query('SELECT ISBN FROM Copy WHERE barcode = ?', [barcode]);
-			const isbn = copyInfo[0].ISBN;
-
-			// 3. Check for the earliest reservation for this ISBN
-			const [reservations]: any = await db.query(
-				'SELECT * FROM Reservations WHERE ISBN = ? ORDER BY reserve_date ASC LIMIT 1',
-				[isbn]
-			);
-
-			if (reservations.length > 0) {
-				const nextUser = reservations[0];
-				const dueDateObj = new Date();
-				dueDateObj.setDate(dueDateObj.getDate() + 14);
-				const dueDate = dueDateObj.toISOString().slice(0, 10);
-
-				// 4. Automatically create a new loan for the reserving user
-				await db.query(
-					`INSERT INTO Loans (barcode, user_id, borrow_date, due_date) 
-                 VALUES (?, ?, ?, ?)`,
-					[barcode, nextUser.user_id, today, dueDate]
-				);
-
-				// 5. Delete the reservation now that it has been fulfilled[cite: 1]
-				await db.query('DELETE FROM Reservations WHERE reservation_id = ?', [
-					nextUser.reservation_id
-				]);
-
-				// Note: The Copy status remains 'Loaned' because it went from one user to another[cite: 1]
-				return { success: true, message: 'Book returned and assigned to next reserver.' };
-			} else {
-				// 6. No reservations? Set the status back to Available[cite: 1]
-				await db.query("UPDATE Copy SET status = 'Available' WHERE barcode = ?", [barcode]);
-				return { success: true, message: 'Book returned and is now Available.' };
-			}
-		} catch (err) {
-			console.error(err);
-			return fail(500, { message: 'Failed to process return.' });
-		}
+	logout: async ({ cookies }) => {
+		cookies.delete('session', { path: '/' });
+		throw redirect(303, '/login');
 	}
 };
