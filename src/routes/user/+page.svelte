@@ -3,11 +3,10 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Separator } from '$lib/components/ui/separator';
-
+	let { data } = $props();
 	// TODO: replace with real data fetched from your backend
 	const user = data.user;
 
-	let { data } = $props();
 
 	const borrowed_books = data.history;
 
@@ -21,7 +20,10 @@
 	];
 
 	// Derive total outstanding fine
-	const total_fine = 0;
+	const total_fine = borrowed_books.reduce(
+		(sum, b) => sum + calculateFine(b.due_date, b.return_date),
+		0
+	);
 
 	function formatDate(dateStr: string) {
 		return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -33,6 +35,25 @@
 
 	function isOverdue(dateStr: string) {
 		return new Date(dateStr) < new Date();
+	}
+	function calculateFine(due_date: string, return_date: string | null) {
+	const today = new Date();
+	const due = new Date(due_date);
+
+	// If returned → check late days
+	if (return_date) {
+		const returned = new Date(return_date);
+		if (returned <= due) return 0;
+
+		const diff = (returned.getTime() - due.getTime()) / (1000 * 60 * 60 * 24);
+		return Math.ceil(diff);
+	}
+
+	// If not returned → check overdue till today
+	if (today <= due) return 0;
+
+	const diff = (today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24);
+	return Math.ceil(diff);
 	}
 </script>
 
@@ -98,11 +119,25 @@
 									<p class="text-xs text-muted-foreground">{book.author}</p>
 								</div>
 								<div class="flex flex-col items-end gap-1">
-									<Badge variant={isOverdue(book.due_date) ? 'destructive' : 'secondary'}>
-										{isOverdue(book.due_date) ? 'Overdue' : `Due ${formatDate(book.due_date)}`}
+									<Badge
+										variant={
+											!book.return_date && isOverdue(book.due_date)
+												? 'destructive'
+												: 'secondary'
+										}
+									>
+										{#if !book.return_date && isOverdue(book.due_date)}
+											Overdue
+										{:else if !book.return_date}
+											Borrowed
+										{:else}
+											Returned
+										{/if}
 									</Badge>
-									{#if book.fine > 0}
-										<span class="text-xs text-destructive">Fine: ${book.fine.toFixed(2)}</span>
+									{#if calculateFine(book.due_date, book.return_date) > 0}
+										<span class="text-xs text-destructive">
+											Fine: ${calculateFine(book.due_date, book.return_date)}
+										</span>
 									{/if}
 								</div>
 							</div>
