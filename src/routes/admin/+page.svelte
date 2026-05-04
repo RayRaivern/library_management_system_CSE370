@@ -3,14 +3,25 @@
 	import * as Accordion from '$lib/components/ui/accordion';
 	import * as Table from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button/';
+	import { Badge } from '$lib/components/ui/badge/';
 	import { enhance } from '$app/forms';
-	import { User, BookCopy, CalendarClock } from '@lucide/svelte';
+	import { User, BookCopy, CalendarClock, ChevronLeft, ChevronRight } from '@lucide/svelte';
 
 	let { data } = $props();
 
 	const users = $derived(data.allUsers || []);
 	const loans = $derived(data.allLoans || []);
 	const reservations = $derived(data.allReservations || []);
+	const books = $derived(data.allBooks || []);
+
+	// Page variables and functions
+	let currentPage = $state(1);
+	const itemsPerPage = 5;
+	const totalPages = $derived(Math.ceil(books.length / itemsPerPage));
+
+	const paginatedBooks = $derived(
+		books.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+	);
 
 	function getActiveLoans(userId: number) {
 		return loans.filter((l: any) => l.user_id === userId);
@@ -26,6 +37,58 @@
 		<h1 class="text-3xl font-bold tracking-tight">Library Administration</h1>
 		<p class="text-muted-foreground">Manage users, track active loans, and monitor reservations.</p>
 	</div>
+
+	<Card.Root>
+		<Card.Header class="flex flex-row items-center justify-between">
+			<div>
+				<Card.Title>Book Inventory</Card.Title>
+				<Card.Description>Overview of all titles and total copy counts.</Card.Description>
+			</div>
+			<div class="flex items-center gap-2">
+				<span class="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+				<Button
+					variant="outline"
+					size="icon"
+					disabled={currentPage === 1}
+					onclick={() => currentPage--}
+				>
+					<ChevronLeft class="h-4 w-4" />
+				</Button>
+				<Button
+					variant="outline"
+					size="icon"
+					disabled={currentPage === totalPages}
+					onclick={() => currentPage++}
+				>
+					<ChevronRight class="h-4 w-4" />
+				</Button>
+			</div>
+		</Card.Header>
+		<Card.Content>
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>ISBN</Table.Head>
+						<Table.Head>Title</Table.Head>
+						<Table.Head>Author</Table.Head>
+						<Table.Head class="text-right">Total Copies</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each paginatedBooks as book}
+						<Table.Row>
+							<Table.Cell class="font-mono text-xs">{book.ISBN}</Table.Cell>
+							<Table.Cell class="font-medium">{book.name}</Table.Cell>
+							<Table.Cell>{book.author || 'N/A'}</Table.Cell>
+							<Table.Cell class="text-right">
+								<Badge variant="secondary">{book.copy_count}</Badge>
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</Card.Content>
+	</Card.Root>
 
 	<Card.Root>
 		<Card.Header>

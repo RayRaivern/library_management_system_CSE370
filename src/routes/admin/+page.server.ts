@@ -8,6 +8,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw error(403, 'Forbidden: Admin access only');
 	}
 
+	// New: Fetch all books and their total copy counts
+	const [booksWithCounts]: any = await db.query(`
+        SELECT b.ISBN, b.name, b.author, COUNT(c.barcode) as copy_count
+        FROM Book b
+        LEFT JOIN Copy c ON b.ISBN = c.ISBN
+        GROUP BY b.ISBN
+        ORDER BY b.name ASC
+    `);
+
 	// Fetch all users and their tier limits
 	const [users]: any = await db.query(`
         SELECT u.*, m.borrow_limit, m.reservation_limit 
@@ -36,7 +45,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		allUsers: users,
 		allLoans: activeLoans,
-		allReservations: activeReservations
+		allReservations: activeReservations,
+		allBooks: booksWithCounts
 	};
 };
 
